@@ -1,6 +1,8 @@
-@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence")
+@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence", "UNREACHABLE_CODE")
 
 package lesson5.task1
+
+import ru.spbstu.wheels.sorted
 
 // Урок 5: ассоциативные массивы и множества
 // Максимальное количество баллов = 14
@@ -96,7 +98,20 @@ fun buildWordSet(text: List<String>): MutableSet<String> {
  *   buildGrades(mapOf("Марат" to 3, "Семён" to 5, "Михаил" to 5))
  *     -> mapOf(5 to listOf("Семён", "Михаил"), 3 to listOf("Марат"))
  */
-fun buildGrades(grades: Map<String, Int>): Map<Int, List<String>> = TODO()
+fun buildGrades(grades: Map<String, Int>): Map<Int, List<String>> {
+    val pairGradeName = mutableMapOf<Int, MutableList<String>>()
+    for ((name, grade) in grades) {
+        // put name to the value position, grade - to key
+        pairGradeName.getOrPut(grade) { mutableListOf() }.add(name)
+        // 5 strings below r making the same as 3 strings above:
+//        if (pairGradeName[grade] != null) {
+//            pairGradeName[grade]?.add(name)
+//        } else {
+//            pairGradeName[grade] = mutableListOf(name)
+//        }
+    }
+    return pairGradeName
+}
 
 /**
  * Простая (2 балла)
@@ -108,7 +123,8 @@ fun buildGrades(grades: Map<String, Int>): Map<Int, List<String>> = TODO()
  *   containsIn(mapOf("a" to "z"), mapOf("a" to "z", "b" to "sweet")) -> true
  *   containsIn(mapOf("a" to "z"), mapOf("a" to "zee", "b" to "sweet")) -> false
  */
-fun containsIn(a: Map<String, String>, b: Map<String, String>): Boolean = TODO()
+fun containsIn(a: Map<String, String>, b: Map<String, String>): Boolean =
+    a.keys.all { a[it] == b[it] }
 
 /**
  * Простая (2 балла)
@@ -125,7 +141,11 @@ fun containsIn(a: Map<String, String>, b: Map<String, String>): Boolean = TODO()
  *     -> a changes to mutableMapOf() aka becomes empty
  */
 fun subtractOf(a: MutableMap<String, String>, b: Map<String, String>) {
-    TODO()
+    for ((key, value) in b) { // go through Map
+        if (a[key] == value) { // key == value -> remove the pair
+            a.remove(key)
+        }
+    }
 }
 
 /**
@@ -135,7 +155,10 @@ fun subtractOf(a: MutableMap<String, String>, b: Map<String, String>) {
  * В выходном списке не должно быть повторяющихся элементов,
  * т. е. whoAreInBoth(listOf("Марат", "Семён, "Марат"), listOf("Марат", "Марат")) == listOf("Марат")
  */
-fun whoAreInBoth(a: List<String>, b: List<String>): List<String> = TODO()
+fun whoAreInBoth(a: List<String>, b: List<String>): List<String> =
+    a.intersect(b.toSet()).distinct() /* intersection of quantities a and b
+    converting toSet was used 2 make a quantity 4 better performance
+    intersections r putting to list, which is a result */
 
 /**
  * Средняя (3 балла)
@@ -277,7 +300,17 @@ fun propagateHandshakes(friends: Map<String, Set<String>>): Map<String, Set<Stri
  *   findSumOfTwo(listOf(1, 2, 3), 4) -> Pair(0, 2)
  *   findSumOfTwo(listOf(1, 2, 3), 6) -> Pair(-1, -1)
  */
-fun findSumOfTwo(list: List<Int>, number: Int): Pair<Int, Int> = TODO()
+fun findSumOfTwo(list: List<Int>, number: Int): Pair<Int, Int> {
+    for ((keyFirst, valueFirst) in list.withIndex()) { // go through list 1st
+        for ((keySecond, valueSecond) in list.withIndex()) { // for the current key of list go through list 2nd
+            // if keys from the 1st and the 2nd iterations not equal and values for this keys == number -> inIf
+            if ((keyFirst != keySecond) && (valueFirst + valueSecond == number)) {
+                return Pair(keyFirst, keySecond).sorted() // sort from min to max
+            }
+        }
+    }
+    return Pair(-1, -1) // return if needed pair not found
+}
 
 /**
  * Очень сложная (8 баллов)
@@ -300,4 +333,56 @@ fun findSumOfTwo(list: List<Int>, number: Int): Pair<Int, Int> = TODO()
  *     450
  *   ) -> emptySet()
  */
-fun bagPacking(treasures: Map<String, Pair<Int, Int>>, capacity: Int): Set<String> = TODO()
+fun bagPacking(
+    treasures: Map<String, // treasure name
+            Pair<Int, Int>> /* how heavy, profit */,
+    capacity: Int /* how many can be taken */
+):
+        Set<String> { // result = allCanTake -> how heavy, what exactly, profit
+    val allCanTake = mutableMapOf<
+            // .first (weight)
+            Int /* weight of suitable treasures */,
+            // .second (name and cost)
+            Pair<Set<String> /* key: Set with names of treasures can be taken */,
+                    Int> /* value: cost of treasures */>()
+
+    allCanTake[0] = Pair(
+        // in the beginning
+        setOf(), /* empty Set: reset treasures can be taken */
+        0, /* reset cost */
+    )
+    for ((treasureName, currentWeightCost) in treasures) { // go through treasures
+        // save pseudo result to buffer
+        val buffer = mutableMapOf<Int, Pair<Set<String>, // buffer[].first (bufferWeight)
+                Int>>() // buffer[].second (buffer_Cost)
+        // buffer = weight, treasureName, cost
+        for ((treasureWeight, pairNameCost) in allCanTake) { // go through allCanTake components
+            /* currentWeightCost.first = current weight
+               currentWeightCost.second = current cost
+            */
+            val maxCost = kotlin.math.max( // check which cost is bigger
+                buffer[treasureWeight + currentWeightCost.first]?.second ?: -100,
+                // buffer_Cost ?: -100
+                allCanTake[treasureWeight + currentWeightCost.first]?.second ?: -100
+                // allCanTake_Cost ?: -100
+            )
+
+            val newWeight = treasureWeight + currentWeightCost.first
+            // newWeight = weight + currentWeight
+            val newCost = pairNameCost.second + currentWeightCost.second
+            // newCost = pairCost + currentCost
+
+            if ((newCost > maxCost) && (capacity >= newWeight)) {
+                buffer[newWeight] = Pair(pairNameCost.first + treasureName, newCost)
+                // buffer[] = "pair_name, treasure_name" + newCost
+            }
+        }
+        for ((weight, pair) in buffer) { // go through buffer
+            allCanTake[weight] = pair // renew result for the current weight
+        }
+    }
+    // println to check result
+//    println(allCanTake)
+    return allCanTake.maxByOrNull { it.value.second /* cost */ }?.value?.first /* weight */ ?: setOf()
+    // maxByOrNull - Returns the first character yielding the largest value of the given function or if there are no characters.null
+}

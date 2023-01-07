@@ -241,7 +241,48 @@ fun decimalFromString(str: String, base: Int): Int = TODO()
  * 90 = XC, 100 = C, 400 = CD, 500 = D, 900 = CM, 1000 = M.
  * Например: 23 = XXIII, 44 = XLIV, 100 = C
  */
-fun roman(n: Int): String = TODO()
+fun roman(n: Int): String {
+    // making alphabet
+    // 1) arabian alphabet list
+    val arabianAlphabet = listOf(
+        1000, 900, 500, 400,
+        100, 90, 50, 40,
+        10, 9, 5, 4, 1
+    )
+    // 2) roman alphabet list
+    val romanAlphabet = listOf(
+        "M",  // 1000
+        "CM", // 900
+        "D",  // 500
+        "CD", // 400
+
+        "C",  // 100
+        "XC", // 90
+        "L",  // 50
+        "XL", // 40
+
+        "X",  // 10
+        "IX", // 9
+        "V",  // 5
+        "IV", // 4
+        "I"   // 1
+    )
+    var nCopy = n // f.e., 1978 = M CM LXX VIII
+    val result = buildString {
+        for (i in arabianAlphabet.indices) { // i belongs [0, arabianAlphabet.size), i++
+            val iterationsMax = nCopy / arabianAlphabet[i] // here find max amount of iterations
+            for (k in 0 until iterationsMax) {
+                // 1978/1000=1 -> 978/900=1 -> 78/500=0 ... 78/50=1 ... 28/10=2 -> 8/5=1 -> 3/1=3
+                nCopy %= arabianAlphabet[i]
+                // 1978 -> 1978 % 1000 = 978 -> 978 % 900 = 78 -> 78 % 50 = 28 -> 28 % 10 = 18 -> 18 % 10 = 8 ->
+                // -> 8 % 5 = 3 -> 3 % 1 = 0
+                append(romanAlphabet[i])
+                // M -> M CM -> M CM LXX -> M CM LXX VIII
+            }
+        }
+    }
+    return result
+}
 
 /**
  * Очень сложная (7 баллов)
@@ -250,4 +291,113 @@ fun roman(n: Int): String = TODO()
  * Например, 375 = "триста семьдесят пять",
  * 23964 = "двадцать три тысячи девятьсот шестьдесят четыре"
  */
-fun russian(n: Int): String = TODO()
+fun russian(n: Int): String {
+    // making basic alphabet
+    val units = listOf(
+        "",        // 0
+        "один ",   // 1
+        "два ",    // 2
+        "три ",    // 3
+        "четыре ", // 4
+        "пять ",   // 5
+        "шесть ",  // 6
+        "семь ",   // 7
+        "восемь ", // 8
+        "девять "  // 9
+    )
+    val fromTenToNineteen =
+        listOf(
+            "десять ",       // 10
+            "одиннадцать ",  // 11
+            "двенадцать ",   // 12
+            "тринадцать ",   // 13
+            "четырнадцать ", // 14
+            "пятнадцать ",   // 15
+            "шестнадцать ",  // 16
+            "семнадцать ",   // 17
+            "восемнадцать ", // 18
+            "девятнадцать "  // 19
+        )
+    val dozens =
+        listOf(
+            "",             // 0
+            "",             // 10
+            "двадцать ",    // 20
+            "тридцать ",    // 30
+            "сорок ",       // 40
+            "пятьдесят ",   // 50
+            "шестьдесят ",  // 60
+            "семьдесят ",   // 70
+            "восемьдесят ", // 80
+            "девяносто "    // 90
+        )
+    val hundreds =
+        listOf(
+            "",           // 0
+            "сто ",       // 100
+            "двести ",    // 200
+            "триста ",    // 300
+            "четыреста ", // 400
+            "пятьсот ",   // 500
+            "шестьсот ",  // 600
+            "семьсот ",   // 700
+            "восемьсот ", // 800
+            "девятьсот "  // 900
+        ) // basic alphabet ended
+
+    // Getting started Main part:
+    // f.e. in number 111999, 111 has the same rule of pronunciation as 999, just add "тысяча" after 111
+    val nFirstThree = n / 1000 // f.e., 1) 111999 -> 111  |  2) 999 -> 0
+    // hundreds of thousands sound the same as
+    val nLastThree = n % 1000 // 1) 111999 -> 999 |  2) 111000 -> 0
+
+    val result =
+        // get started nFirstThree pronunciation
+        hundreds[nFirstThree / 100] + // 1) 111 -> 1  |  2) 0 -> 0
+                // check the 2nd digit from the 1st three
+                (if (nFirstThree % 100 / 10 == 1) { /* f.e., 1) 111999 -> 1>1<1... -> 1 -> ifIn:
+                                                                  2) 999 -> 0>0<0.... -> else */
+                    fromTenToNineteen[nFirstThree % 10] // if 11..19 -> get pronunciation fromTenToNineteen
+                } else { /* f.e., 1) 123999
+                                  2) 999
+                                  3) 456777 */
+                    (dozens[nFirstThree % 100 / 10] + /* f.e., 1) 123999 -> 1>2<3... -> 2
+                                                                    2) 999 -> 0>0<0... -> 0
+                                                                    3) 456777 -> 4>5<6... -> 4 */
+                            when (nFirstThree % 10) { /* f.e., 1) 123999 -> 12>3<... -> 3
+                                                                    2) 999 -> 00>0<.... -> 0
+                                                                    3) 456777 -> 45>6<... -> 6 */
+                                0 -> ""
+                                1 -> "одна "
+                                2 -> "две "
+                                else -> units[nFirstThree % 10] // "три ", "четыре  ", ...
+                            })
+                }) +
+                (if (nFirstThree != 0) { /* f.e., 1) 213999 -> 213... -> ifIn
+                                                       2) 456777 -> 456... -> ifIn
+                                                       3) 999 -> 000... -> ifExit */
+                    // last 2 digits of number have the same pronunciation rule despite numbers 11..19
+                    if (nFirstThree % 100 in 11..19) { /* f.e., 1) 213999 -> 213... -> ifIn
+                                                                           2) 456777 -> 456... -> else */
+                        "тысяч "
+                    } else { // f.e. 456777
+                        when (nFirstThree % 10) {
+                            1 -> "тысяча "
+                            in 2..4 -> "тысячи "
+                            else -> "тысяч "
+                        }
+                    }
+                } else { // f.e., 999
+                    ""
+                }) + // end of nFirstThree pronunciation
+                /* get started nLastThree pronunciation
+                 * this step is similar to the step above, so comments not needed */
+                (hundreds[nLastThree / 100] +
+                        if (nLastThree % 100 / 10 == 1) {
+                            fromTenToNineteen[nLastThree % 10]
+                        } else {
+                            (dozens[nLastThree % 100 / 10] +
+                                    units[nLastThree % 10])
+                        }) // end of nLastThree pronunciation
+    return result.trim() // return result deleting spaces at the beginning and at the end
+}
