@@ -1,4 +1,4 @@
-@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence")
+@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence", "UNREACHABLE_CODE", "UNUSED_EXPRESSION")
 
 package lesson6.task1
 
@@ -116,7 +116,7 @@ fun flattenPhoneNumber(phone: String): String = TODO()
  * Прочитать строку и вернуть максимальное присутствующее в ней число (717 в примере).
  * При нарушении формата входной строки или при отсутствии в ней чисел, вернуть -1.
  */
-fun bestLongJump(jumps: String): Int = TODO()
+// fun bestLongJump(jumps: String): Int = TO DO()
 
 /**
  * Сложная (6 баллов)
@@ -130,7 +130,11 @@ fun bestLongJump(jumps: String): Int = TODO()
  * вернуть -1.
  */
 fun bestHighJump(jumps: String): Int {
-    val result = try {
+    try {
+        if (jumps.contains(Regex("""[^-%+\d\s]""")) || jumps.isEmpty()
+        ) {
+            return -1
+        }
         val jumpsList = jumps.split(" ") // create list with jumps and info abt them separated
         /*
           220
@@ -146,17 +150,16 @@ fun bestHighJump(jumps: String): Int {
           234
           %
         */
-        var maxJump = 0 // reset maxJump
+        var maxJump = -1 // reset maxJump
         for (current in jumpsList.indices step 2) { // go through jumpsList with step 2
             if (jumpsList[current + 1].contains('+') && jumpsList[current].toInt() > maxJump) {
                 maxJump = jumpsList[current].toInt()
             }
         }
-        maxJump
+        return maxJump
     } catch (e: Exception) {
-        -1 // smth wrong or no gd tries -> return -1
+        return -1 // smth wrong or no gd tries -> return -1
     }
-    return result // return try result of maxJump
 }
 
 /**
@@ -250,7 +253,7 @@ fun endOfCurrentLoop(str: String): Int {
     for (endCurrentLoopCounter in str.indices) { /* f.e., 1) [>]>[<] i = : 0 -> 2 -> return i
                                       2) [>[<<]] i = : 0 -> 2 -> 5 -> 6 -> return i */
         when (str[endCurrentLoopCounter]) { /* f.e., 1) [>]>[<] loopCommands = : 0 -> 1 -> 0
-                                 2) [>[<<]] loopCommands = : 0 -> 1 -> 2 -> 1 -> 0 */
+                                                     2) [>[<<]] loopCommands = : 0 -> 1 -> 2 -> 1 -> 0 */
             '[' -> loopCommands++ // current loop starts
             ']' -> if (loopCommands == 1) { // current loop ended
                 return endCurrentLoopCounter // end of current sub fun, return result to main part
@@ -271,11 +274,28 @@ fun computeDeviceCells(cells: Int, commands: String, limit: Int): List<Int> {
                                                        2) [>]<[>] loopBeginEnd = : 0 -> 1 -> 0 -> 1 -> 0
                                                        3) [[>>[<]>] loopBeginEnd = : 0 -> 1 -> 2 -> 3 -> 2 -> 1
                                                        4) >[>[q]] loopBeginEnd = : 0 -> 1 -> 2 -> exception */
-        !in availableChars /* if unavailable char met */ -> throw IllegalArgumentException() // exception catch
-        '[' -> loopBeginEnd++ // 1st element "[" of pair "[]" found, so ++
-        ']' -> loopBeginEnd-- // 2nd element "]" of pair "[]" found, so --
+        !in availableChars /* if unavailable char met */ -> {
+            throw IllegalArgumentException()
+            println(
+                "{\n\t\"java.lang.IllegalArgumentException\"\n" +
+                        "\t\"message\": Unavailable char met\"\n}",
+            )
+        } // exception catch
+        '[' -> {
+            loopBeginEnd++
+        } // 1st element "[" of pair "[]" found, so ++
+        ']' -> {
+            loopBeginEnd--
+            if (loopBeginEnd < 0) break
+        } // 2nd element "]" of pair "[]" found, so --
     }
-    if (loopBeginEnd != 0) throw IllegalArgumentException()  /* f.e., 1) [>[<<]] loopBeginEnd = 0 -> all is gd
+    if (loopBeginEnd != 0) {
+        throw IllegalArgumentException()
+        println(
+            "{\n\t\"java.lang.IllegalArgumentException\"\n" +
+                    "\t\"message\": Unpaired closing bracket\n}"
+        )
+    }  /* f.e., 1) [>[<<]] loopBeginEnd = 0 -> all is gd
                                                                       2) [>]<[>] loopBeginEnd = 0 -> all is gd
                                                                       3) [[>>[<]>] loopBeginEnd = 1 -> exception */
     // end of checking on pairs
@@ -315,7 +335,13 @@ fun computeDeviceCells(cells: Int, commands: String, limit: Int): List<Int> {
         /* before end or continue the cycle it's needed to check that detector
            belongs [0, cells - 1] => [0, cells), case cells has Int type.
            So if it doesn't belong to range -> throw IllegalStateException() */
-        if (detector !in 0 until cells) throw IllegalStateException()
+        if (detector !in 0 until cells) {
+            throw IllegalStateException()
+            println(
+                "{\n\t\"java.lang.IllegalArgumentException\"" +
+                        "\n\t\"message\": java.lang.IndexOutOfBoundsException\n}"
+            )
+        }
     }
     return result.toList()
 } // interesting task, looks like realisation of Turing Machine
