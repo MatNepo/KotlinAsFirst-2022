@@ -1,8 +1,10 @@
-@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence")
+@file:Suppress("UNUSED_PARAMETER", "ConvertCallChainIntoSequence", "NAME_SHADOWING")
 
 package lesson7.task1
 
 import java.io.File
+import java.io.PrintStream
+import java.util.*
 
 // Урок 7: работа с файлами
 // Урок интегральный, поэтому его задачи имеют сильно увеличенную стоимость
@@ -63,7 +65,15 @@ fun alignFile(inputName: String, lineLength: Int, outputName: String) {
  * Подчёркивание в середине и/или в конце строк значения не имеет.
  */
 fun deleteMarked(inputName: String, outputName: String) {
-    TODO()
+    PrintStream(File(outputName)).use { printStream ->
+        File(inputName).forEachLine { currentLine: String ->
+            /* first it's needed to check the line on empties,
+               then (only after) add expression to check on '_' */
+            if (currentLine.isEmpty() || currentLine[0] != '_') {
+                printStream.println(currentLine) // ad current line if it's kk to the File
+            }
+        }
+    }
 }
 
 /**
@@ -75,7 +85,24 @@ fun deleteMarked(inputName: String, outputName: String) {
  * Регистр букв игнорировать, то есть буквы е и Е считать одинаковыми.
  *
  */
-fun countSubstrings(inputName: String, substrings: List<String>): Map<String, Int> = TODO()
+fun countSubstrings(inputName: String, substrings: List<String>): Map<String, Int> {
+    val result = mutableMapOf<String, Int>()
+    val inputNameLower = File(inputName).readText().lowercase() // make input with only lower cases
+    for (currentString in substrings.indices) { // go through each string of substrings
+        if (!result.contains(substrings[currentString])) { // if no input in the current string
+            result[substrings[currentString]] = 0 // result -> 0
+        }
+        val curSubLow = substrings[currentString].lowercase() // curSubLow => make CURrent SUBstring to LOWer case
+        for (currentInput in inputNameLower.indices) { // go through the inputName
+            if (inputNameLower.startsWith(curSubLow, currentInput) // true if starts with currentInput
+            ) {
+                result[substrings[currentString]] = // renew result
+                    result[substrings[currentString]]!! + 1 // !! needs to include null result
+            }
+        }
+    }
+    return result
+}
 
 
 /**
@@ -91,8 +118,74 @@ fun countSubstrings(inputName: String, substrings: List<String>): Map<String, In
  * Исключения (жюри, брошюра, парашют) в рамках данного задания обрабатывать не нужно
  *
  */
+
+fun mistakesChecking(line: MatchResult): CharSequence {
+    val mistake = line.value
+    return listOf(
+        mistake[0],
+        when (mistake[1]) {
+            'ы' -> 'и'
+            'Ы' -> 'И'
+            'ю' -> 'у'
+            'Ю' -> 'У'
+            'я' -> 'а'
+            'Я' -> 'А'
+            else -> '-'
+        },
+    ).joinToString("")
+}
+
+fun wordsExceptionA(word: MatchResult): CharSequence {
+    val mistake = word.value
+    return listOf(
+        when (mistake[4]) {
+            'и' -> 'ы'
+            'И' -> 'Ы'
+            'у' -> 'ю'
+            'У' -> 'Ю'
+            'а' -> 'я'
+            'А' -> 'Я'
+            else -> '-'
+        },
+    ).joinToString("")
+}
+
+fun wordsExceptionB(word: MatchResult): CharSequence {
+    val mistake = word.value
+    return listOf(
+        when (mistake[1]) {
+            'и' -> 'ы'
+            'И' -> 'Ы'
+            'у' -> 'ю'
+            'У' -> 'Ю'
+            'а' -> 'я'
+            'А' -> 'Я'
+            else -> '-'
+        },
+    ).joinToString("")
+}
+
 fun sibilants(inputName: String, outputName: String) {
-    TODO()
+    val mistakeFinder = Regex("""[жшчщ][ыяю]""", RegexOption.IGNORE_CASE)
+    PrintStream(File(outputName)).use { printStream ->
+        File(inputName).forEachLine { line ->
+            mistakeFinder.replace(line, ::mistakesChecking)
+        }
+    }
+    val outputNameLow = outputName.split(" ")
+    for (current in outputNameLow) {
+        val buffer = current
+        val curLow = current.lowercase()
+        if (curLow.contains("брош") && curLow.contains("ра")) {
+            mistakeFinder.replace(buffer, ::wordsExceptionA)
+        } else if (curLow.contains("ж") && curLow.contains("ри")) {
+            mistakeFinder.replace(buffer, ::wordsExceptionB)
+        } else if (curLow.contains("пара") && curLow.contains("т")) {
+            mistakeFinder.replace(buffer, ::wordsExceptionA)
+        }
+        Regex(outputName, RegexOption.IGNORE_CASE).replace(current, buffer)
+    }
+    println(outputName)
 }
 
 /**
@@ -268,21 +361,55 @@ Suspendisse ~~et elit in enim tempus iaculis~~.
  *
  * Соответствующий выходной файл:
 <html>
-    <body>
-        <p>
-            Lorem ipsum <i>dolor sit amet</i>, consectetur <b>adipiscing</b> elit.
-            Vestibulum lobortis. <s>Est vehicula rutrum <i>suscipit</i></s>, ipsum <s>lib</s>ero <i>placerat <b>tortor</b></i>.
-        </p>
-        <p>
-            Suspendisse <s>et elit in enim tempus iaculis</s>.
-        </p>
-    </body>
+<body>
+<p>
+Lorem ipsum <i>dolor sit amet</i>, consectetur <b>adipiscing</b> elit.
+Vestibulum lobortis. <s>Est vehicula rutrum <i>suscipit</i></s>, ipsum <s>lib</s>ero <i>placerat <b>tortor</b></i>.
+</p>
+<p>
+Suspendisse <s>et elit in enim tempus iaculis</s>.
+</p>
+</body>
 </html>
  *
  * (Отступы и переносы строк в примере добавлены для наглядности, при решении задачи их реализовывать не обязательно)
  */
 fun markdownToHtmlSimple(inputName: String, outputName: String) {
-    TODO()
+    var text = File(inputName).readText() // to work with input file
+    File(outputName).bufferedWriter().use {
+        it.write("<html><body>") // start label
+        mapOf( // translate special text symbols to html
+            Pair("~~(.*?)~~", Pair("s", "~~")),
+            Pair("\\*\\*(.*?)\\*\\*", Pair("b", "**")),
+            Pair("\\*(.*?)\\*", Pair("i", "*"))
+        ).forEach /* go through map */ { (mapPair, mapValue) ->
+            text = Regex(mapPair).replace(text) /* make a replacement using lambda: */ { it ->
+                "<${mapValue.first}>" + it.value.replace(mapValue.second, "") + "</${mapValue.first}>"
+                // f.e., <i> + (some text without ~~, * or **) + </i>
+            }
+        }
+        val textList = text.split("\n") // make a list from initial text using new line as a split reason
+        var isParagraph = false // detecting of paragraph, at the beginning its value = false (boolean)
+        if (text.isBlank()) it.write("<p></p>") // if no text (empty) -> just write <p></p>
+        textList.forEachIndexed { index, line -> // go through lines giving each an index
+            // if it's paragraph, index not a 0 and preorder line of the List was empty ->
+            if (isParagraph && index != 0 && textList[index - 1].isBlank()) {
+                isParagraph = false // renew isParagraph
+                it.write("</p>")
+            }
+            // if it's a paragraph and line is not empty ->
+            if (!isParagraph && line.isNotBlank()) {
+                isParagraph = true // renew isParagraph
+                it.write("<p>")
+            }
+            it.write(line) // write current line
+        }
+        it.write(
+            // if isParagraph == true, it's needed to end the paragraph writing "</p>", else nothing
+            (if (isParagraph) "</p>" else "") +
+                    "</body></html>" // add ending of an output file
+        )
+    }
 }
 
 /**
@@ -319,65 +446,65 @@ fun markdownToHtmlSimple(inputName: String, outputName: String) {
  *
  * Пример входного файла:
 ///////////////////////////////начало файла/////////////////////////////////////////////////////////////////////////////
-* Утка по-пекински
-    * Утка
-    * Соус
-* Салат Оливье
-    1. Мясо
-        * Или колбаса
-    2. Майонез
-    3. Картофель
-    4. Что-то там ещё
-* Помидоры
-* Фрукты
-    1. Бананы
-    23. Яблоки
-        1. Красные
-        2. Зелёные
+ * Утка по-пекински
+ * Утка
+ * Соус
+ * Салат Оливье
+1. Мясо
+ * Или колбаса
+2. Майонез
+3. Картофель
+4. Что-то там ещё
+ * Помидоры
+ * Фрукты
+1. Бананы
+23. Яблоки
+1. Красные
+2. Зелёные
 ///////////////////////////////конец файла//////////////////////////////////////////////////////////////////////////////
  *
  *
  * Соответствующий выходной файл:
 ///////////////////////////////начало файла/////////////////////////////////////////////////////////////////////////////
 <html>
-  <body>
-    <p>
-      <ul>
-        <li>
-          Утка по-пекински
-          <ul>
-            <li>Утка</li>
-            <li>Соус</li>
-          </ul>
-        </li>
-        <li>
-          Салат Оливье
-          <ol>
-            <li>Мясо
-              <ul>
-                <li>Или колбаса</li>
-              </ul>
-            </li>
-            <li>Майонез</li>
-            <li>Картофель</li>
-            <li>Что-то там ещё</li>
-          </ol>
-        </li>
-        <li>Помидоры</li>
-        <li>Фрукты
-          <ol>
-            <li>Бананы</li>
-            <li>Яблоки
-              <ol>
-                <li>Красные</li>
-                <li>Зелёные</li>
-              </ol>
-            </li>
-          </ol>
-        </li>
-      </ul>
-    </p>
-  </body>
+<body>
+<p>
+<ul>
+<li>
+Утка по-пекински
+<ul>
+<li>Утка</li>
+<li>Соус</li>
+</ul>
+</li>
+<li>
+Салат Оливье
+<ol>
+<li>Мясо
+<ul>
+<li>Или колбаса</li>
+</ul>
+</li>
+<li>Майонез</li>
+<li>Картофель</li>
+<li>Что-то там ещё</li>
+</ol>
+</li>
+<li>Помидоры</li>
+<li>Фрукты
+<ol>
+<li>Бананы</li>
+<li>Яблоки
+<ol>
+<li>Красные</li>
+<li>Зелёные</li>
+</ol>
+</li>
+</ol>
+</li>
+</ul>
+</p>
+</body>
 </html>
 ///////////////////////////////конец файла//////////////////////////////////////////////////////////////////////////////
  * (Отступы и переносы строк в примере добавлены для наглядности, при решении задачи их реализовывать не обязательно)
@@ -404,23 +531,23 @@ fun markdownToHtml(inputName: String, outputName: String) {
  * Вывести в выходной файл процесс умножения столбиком числа lhv (> 0) на число rhv (> 0).
  *
  * Пример (для lhv == 19935, rhv == 111):
-   19935
-*    111
+19935
+ *    111
 --------
-   19935
+19935
 + 19935
 +19935
 --------
- 2212785
+2212785
  * Используемые пробелы, отступы и дефисы должны в точности соответствовать примеру.
  * Нули в множителе обрабатывать так же, как и остальные цифры:
-  235
-*  10
+235
+ *  10
 -----
-    0
+0
 +235
 -----
- 2350
+2350
  *
  */
 fun printMultiplicationProcess(lhv: Int, rhv: Int, outputName: String) {
@@ -434,21 +561,170 @@ fun printMultiplicationProcess(lhv: Int, rhv: Int, outputName: String) {
  * Вывести в выходной файл процесс деления столбиком числа lhv (> 0) на число rhv (> 0).
  *
  * Пример (для lhv == 19935, rhv == 22):
-  19935 | 22
- -198     906
- ----
-    13
-    -0
-    --
-    135
-   -132
-   ----
-      3
+ 19935 | 22
+-198     906
+----
+   13
+   -0
+   --
+   135
+  -132
+  ----
+     3
 
  * Используемые пробелы, отступы и дефисы должны в точности соответствовать примеру.
  *
  */
-fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
-    TODO()
+
+// main fun is used to watch program output
+fun main(args: Array<String>) {
+    val reader = Scanner(System.`in`)
+    println("INT 1:")
+    val divisible: Int = reader.nextInt()
+    println("INT 2:")
+    val divider: Int = reader.nextInt()
+    //ввод закончен
+
+    printDivisionProcess(divisible, divider, "file.txt")
 }
 
+fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
+
+    val writer = File(outputName) // создаём выходной файл
+    val printStream = PrintStream(writer)
+
+    // необязательно, но так понятнее
+    val divisible: Int = lhv // делимое
+    val divider: Int = rhv // делитель
+
+    val divisibleString = divisible.toString()
+    println(" $divisible | $divider") // 1я строка вывода
+    printStream.println(" $divisible | $divider")
+
+    val quotient: Int = divisible / divider // частное
+    val quotientString = quotient.toString()
+
+    var deductible = quotientString[0].digitToInt() * divider // вычитаемое = частное * делитель
+    val deductibleString = deductible.toString()
+
+
+    var minuend = divisibleString.substring(0, deductibleString.length).toInt() // текущая разность
+    // текущая разность это остаток, но не итоговый, например, в примере из условия это 13 и 135
+    var index2: Int
+    if (deductible > minuend) { // вычитаемое > текущей разности
+        minuend = divisibleString.substring(0, deductibleString.length + 1).toInt()
+        index2 = deductibleString.length + 1
+    } else {
+        index2 = deductibleString.length
+        // вывод первого вычитаемого
+        print("-$deductible")
+        printStream.print("-$deductible")
+    }
+
+    val pos1 = divisibleString.length + 3 // начало частного
+    val pos2 = deductibleString.length // сохраняем позицию вычитаемого
+    // расчет пробелов для того, чтобы вывести частное
+    for (i in 1..pos1 - pos2) {
+        printStream.print(" ")
+        print(" ")
+    }
+
+    println(quotient)
+    printStream.println(quotient)
+    // _ выводим
+    for (i in 1..deductibleString.length + 1) {
+        print("-")
+        printStream.print("-")
+    }
+
+    // что имеется: длина на которую надо сделать отступ
+    // deductible - делитель
+    // в modString 906
+    // нужно учесть: больше ли верх
+    // посчитать снос верха
+    // посчитать необходимый отступ
+    //divisible, divisibleString, divider, quotient, quotientString, deductible, deductibleString
+    // var space = deductibleString.length //отступ слева должен считаться как 1(по умолчанию) + вычитаемое минус частное
+
+    var minuendLengthBefore = minuend.toString().length // длина текущей разности
+    minuend -= deductible // текущая разность - вычитаемое (обновили текущую разность)
+    var space = 1 + minuendLengthBefore - minuend.toString().length // space это количество отступов слева
+
+    // здесь пробегаемся по всем цифрам в частном, кроме самой первой, тк ее уже учли
+    for (i in 1 until quotientString.length) {
+        val minuendBefore = minuend // нужно для того, чтобы вывести 0
+        minuend *= 10 // для сноса цифры
+        minuend += divisibleString[index2].digitToInt() //снос цифры
+        index2++
+
+        // просто вывод с учетом всех особенностей
+        println()
+        printStream.println()
+        for (i in 1..space) { // пробелы перед текущей разностью
+            print(" ")
+            printStream.print(" ")
+        }
+        if (minuendBefore == 0) { // если остаток текущей разности == 0
+            print("0")
+            printStream.print("0")
+        }
+
+        // вывод текущей разности
+        println(minuend)
+        printStream.println(minuend)
+        deductible = quotientString[i].digitToInt() * divider // вычитаемое = (текущая цифра частного) * делитель
+        for (i in 1 until space) { // кол-во пробелов перед вычитаемым
+            print(" ")
+            printStream.print(" ")
+        }
+
+        // учет особенности вывода
+        if (deductible.toString().length < minuend.toString().length || minuendBefore == 0) {
+            printStream.print(" ")
+            print(" ")
+        }
+        // знак минуса для всех вычитаемых кроме первого
+        print("-")
+        printStream.print("-")
+        // вычитаемое
+        println(deductible)
+        printStream.println(deductible)
+        if (minuendLengthBefore - minuend.toString().length == 0 || deductible == 0) {
+            for (i in 1..space) {
+                print(" ")
+                printStream.print(" ")
+            }
+        } else {
+            for (i in 1 until space) {
+                print(" ")
+                printStream.print(" ")
+            }
+        }
+
+        val deductibleLength = deductible.toString().length
+        // вывод чёрточек перед результатом текущей разности
+        for (i in 0..deductibleLength) {
+            print("-")
+            printStream.print("-")
+        }
+        // аналогичное было объяснено выше
+        minuendLengthBefore = minuend.toString().length
+        minuend -= deductible
+        val minuendString = minuend.toString()
+        space += if (minuendLengthBefore - minuendString.length == 0 && deductible != 0) {
+            1
+        } else {
+            minuendLengthBefore - minuendString.length
+        }
+    }
+//  Вывод остатка от деления
+    println()
+    printStream.println()
+    for (i in 1..space) { // кол-во пробелов перед итоговым остатком
+        printStream.print(" ")
+        print(" ")
+    }
+    // вывод остатка
+    printStream.println(minuend)
+    println(minuend)
+}

@@ -135,7 +135,7 @@ fun bestHighJump(jumps: String): Int {
         ) {
             return -1
         }
-        val jumpsList = jumps.split(" ") // create list with jumps and info abt them separated
+            val jumpsList = jumps.split(" ") // create list with jumps and info abt them separated
         /*
           220
           +
@@ -251,7 +251,7 @@ fun endOfCurrentLoop(str: String): Int {
     var loopCommands = 0
     // endCurrentLoopCounter - value with a position of the element which ends current loop
     for (endCurrentLoopCounter in str.indices) { /* f.e., 1) [>]>[<] i = : 0 -> 2 -> return i
-                                      2) [>[<<]] i = : 0 -> 2 -> 5 -> 6 -> return i */
+                                                          2) [>[<<]] i = : 0 -> 2 -> 5 -> 6 -> return i */
         when (str[endCurrentLoopCounter]) { /* f.e., 1) [>]>[<] loopCommands = : 0 -> 1 -> 0
                                                      2) [>[<<]] loopCommands = : 0 -> 1 -> 2 -> 1 -> 0 */
             '[' -> loopCommands++ // current loop starts
@@ -296,8 +296,8 @@ fun computeDeviceCells(cells: Int, commands: String, limit: Int): List<Int> {
                     "\t\"message\": Unpaired closing bracket\n}"
         )
     }  /* f.e., 1) [>[<<]] loopBeginEnd = 0 -> all is gd
-                                                                      2) [>]<[>] loopBeginEnd = 0 -> all is gd
-                                                                      3) [[>>[<]>] loopBeginEnd = 1 -> exception */
+                2) [>]<[>] loopBeginEnd = 0 -> all is gd
+                3) [[>>[<]>] loopBeginEnd = 1 -> exception */
     // end of checking on pairs
 
     // create variables and values

@@ -356,17 +356,17 @@ fun russian(n: Int): String {
         hundreds[nFirstThree / 100] + // 1) 111 -> 1  |  2) 0 -> 0
                 // check the 2nd digit from the 1st three
                 (if (nFirstThree % 100 / 10 == 1) { /* f.e., 1) 111999 -> 1>1<1... -> 1 -> ifIn:
-                                                                  2) 999 -> 0>0<0.... -> else */
+                                                             2) 999 -> 0>0<0.... -> else */
                     fromTenToNineteen[nFirstThree % 10] // if 11..19 -> get pronunciation fromTenToNineteen
                 } else { /* f.e., 1) 123999
                                   2) 999
                                   3) 456777 */
                     (dozens[nFirstThree % 100 / 10] + /* f.e., 1) 123999 -> 1>2<3... -> 2
-                                                                    2) 999 -> 0>0<0... -> 0
-                                                                    3) 456777 -> 4>5<6... -> 4 */
+                                                               2) 999 -> 0>0<0... -> 0
+                                                               3) 456777 -> 4>5<6... -> 4 */
                             when (nFirstThree % 10) { /* f.e., 1) 123999 -> 12>3<... -> 3
-                                                                    2) 999 -> 00>0<.... -> 0
-                                                                    3) 456777 -> 45>6<... -> 6 */
+                                                               2) 999 -> 00>0<.... -> 0
+                                                               3) 456777 -> 45>6<... -> 6 */
                                 0 -> ""
                                 1 -> "одна "
                                 2 -> "две "
@@ -374,11 +374,11 @@ fun russian(n: Int): String {
                             })
                 }) +
                 (if (nFirstThree != 0) { /* f.e., 1) 213999 -> 213... -> ifIn
-                                                       2) 456777 -> 456... -> ifIn
-                                                       3) 999 -> 000... -> ifExit */
+                                                  2) 456777 -> 456... -> ifIn
+                                                  3) 999 -> 000... -> ifExit */
                     // last 2 digits of number have the same pronunciation rule despite numbers 11..19
                     if (nFirstThree % 100 in 11..19) { /* f.e., 1) 213999 -> 213... -> ifIn
-                                                                           2) 456777 -> 456... -> else */
+                                                                      2) 456777 -> 456... -> else */
                         "тысяч "
                     } else { // f.e. 456777
                         when (nFirstThree % 10) {
