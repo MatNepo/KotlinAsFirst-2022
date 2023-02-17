@@ -135,7 +135,7 @@ fun bestHighJump(jumps: String): Int {
         ) {
             return -1
         }
-            val jumpsList = jumps.split(" ") // create list with jumps and info abt them separated
+        val jumpsList = jumps.split(" ") // create list with jumps and info abt them separated
         /*
           220
           +

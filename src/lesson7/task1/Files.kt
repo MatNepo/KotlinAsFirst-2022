@@ -576,20 +576,21 @@ fun printMultiplicationProcess(lhv: Int, rhv: Int, outputName: String) {
  *
  */
 
-// main fun is used to watch program output
+// main fun is used to watch program output before running tests
 fun main(args: Array<String>) {
+    // initialisation
     val reader = Scanner(System.`in`)
     println("INT 1:")
     val divisible: Int = reader.nextInt()
     println("INT 2:")
     val divider: Int = reader.nextInt()
-    //ввод закончен
-
-    printDivisionProcess(divisible, divider, "file.txt")
+    // output result
+    println()
+    printDivisionProcess(divisible, divider, "file.txt") // callable class
 }
 
 fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
-
+    // p.s., хотел дальше продолжить писать комментарии на англ., но понял, что сам больше запутаюсь
     val writer = File(outputName) // создаём выходной файл
     val printStream = PrintStream(writer)
 
@@ -609,13 +610,14 @@ fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
 
 
     var minuend = divisibleString.substring(0, deductibleString.length).toInt() // текущая разность
-    // текущая разность это остаток, но не итоговый, например, в примере из условия это 13 и 135
+    // Текущая разность это остаток, но не итоговый, например, в примере из условия это 13 и 135
+    // * Итоговая разность/остаток в примере из усл. - это 3
     var index2: Int
-    if (deductible > minuend) { // вычитаемое > текущей разности
-        minuend = divisibleString.substring(0, deductibleString.length + 1).toInt()
-        index2 = deductibleString.length + 1
+    if (deductible > minuend) { // вычитаемое > текущей разности (по значению)
+        index2 = deductibleString.length + 1 // длина вычитаемого увеличивается на 1
+        minuend = divisibleString.substring(0, index2).toInt()
     } else {
-        index2 = deductibleString.length
+        index2 = deductibleString.length // сохраняем длину вычитаемого
         // вывод первого вычитаемого
         print("-$deductible")
         printStream.print("-$deductible")
@@ -631,7 +633,7 @@ fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
 
     println(quotient)
     printStream.println(quotient)
-    // _ выводим
+    // "-" выводим
     for (i in 1..deductibleString.length + 1) {
         print("-")
         printStream.print("-")
@@ -651,13 +653,13 @@ fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
     var space = 1 + minuendLengthBefore - minuend.toString().length // space это количество отступов слева
 
     // здесь пробегаемся по всем цифрам в частном, кроме самой первой, тк ее уже учли
-    for (i in 1 until quotientString.length) {
+    for (i in 1 until quotientString.length) { // в этом цикле проходим посимвольно по частному
         val minuendBefore = minuend // нужно для того, чтобы вывести 0
         minuend *= 10 // для сноса цифры
         minuend += divisibleString[index2].digitToInt() //снос цифры
         index2++
 
-        // просто вывод с учетом всех особенностей
+        // перемещаем текущую разность при выводе на след. строку
         println()
         printStream.println()
         for (i in 1..space) { // пробелы перед текущей разностью
@@ -679,6 +681,7 @@ fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
         }
 
         // учет особенности вывода
+        // Чтобы правильно выводило число с наименьшим числом знаков под числом с наибольшим числом знаков
         if (deductible.toString().length < minuend.toString().length || minuendBefore == 0) {
             printStream.print(" ")
             print(" ")
